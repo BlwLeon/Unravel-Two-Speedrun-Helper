@@ -3,6 +3,7 @@ import hashlib
 import os
 import struct
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -50,8 +51,8 @@ class KitTests(unittest.TestCase):
         out = kitfile.unpack_chunks(kitfile.pack_chunks(data), len(data))
         self.assertEqual(out, data)
 
-    def test_patch_entry(self, tmp=Path("/tmp/ut2h_test")):
-        tmp.mkdir(exist_ok=True)
+    def test_patch_entry(self):
+        tmp = Path(tempfile.mkdtemp())
         index, part = make_kit({0x11: b"hello" * 100, modbuild.YARNY_HASH: FAKE_SCRIPT})
         new_script = b"patched" * 1000
         new_index, new_part = kitfile.build_patched(index, part, {modbuild.YARNY_HASH: new_script})
