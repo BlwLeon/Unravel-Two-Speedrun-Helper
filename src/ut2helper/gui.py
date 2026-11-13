@@ -44,6 +44,19 @@ for _c in range(ord("A"), ord("Z") + 1):
     VK_NAMES[_c] = chr(_c)
 
 
+def write_error_log() -> Path:
+    """Append the current exception with traceback to error.log next to the settings."""
+    import traceback
+    log = Settings.path().parent / "error.log"
+    try:
+        log.parent.mkdir(parents=True, exist_ok=True)
+        with open(log, "a", encoding="utf-8") as f:
+            f.write(f"--- {__version__}\n{traceback.format_exc()}\n")
+    except OSError:
+        pass
+    return log
+
+
 def is_admin() -> bool:
     try:
         return bool(ctypes.windll.shell32.IsUserAnAdmin())  # type: ignore[attr-defined]
@@ -130,7 +143,8 @@ class App(tk.Tk):
             messagebox.showerror("Error", str(e))
             return False
         except Exception as e:  # pragma: no cover - last resort
-            messagebox.showerror("Unexpected error", repr(e))
+            log = write_error_log()
+            messagebox.showerror("Unexpected error", f"{e!r}\n\nDetails were written to:\n{log}")
             return False
         finally:
             self.config(cursor="")

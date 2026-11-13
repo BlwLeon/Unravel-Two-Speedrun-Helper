@@ -93,10 +93,13 @@ def is_game_running() -> bool:
     if sys.platform != "win32":
         return False
     try:
-        out = subprocess.run(["tasklist", "/FI", f"IMAGENAME eq {EXE_NAME}"],
-                             capture_output=True, text=True, creationflags=0x08000000).stdout
+        proc = subprocess.run(
+            ["tasklist", "/FO", "CSV", "/NH", "/FI", f"IMAGENAME eq {EXE_NAME}"],
+            stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            creationflags=0x08000000)  # CREATE_NO_WINDOW
+        out = (proc.stdout or b"").decode("mbcs", errors="replace")
         return EXE_NAME.lower() in out.lower()
-    except OSError:
+    except Exception:
         return False
 
 

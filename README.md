@@ -61,6 +61,10 @@ practice tools, and a **Speedrun Mode** – and starts the game for you.
 If Windows refuses to write to the game folder, the helper offers to restart itself as
 administrator.
 
+**Windows SmartScreen:** the exe is not code-signed, so Windows may show
+"Windows protected your PC" on the first start. Click *More info → Run anyway*.
+If you prefer, run it from source instead (see *Building from source*).
+
 ### Uninstall
 
 Click **Restore vanilla files** (or *Play Vanilla*). Alternatively use
