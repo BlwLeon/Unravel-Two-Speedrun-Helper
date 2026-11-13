@@ -74,6 +74,7 @@ class ModBuildTests(unittest.TestCase):
             self.assertEqual(text.count("pcall(PracticeUpdate, self, dt)"), 1)
             self.assertEqual(text.count("pcall(PracticeLateUpdate, self, dt)"), 1)
             self.assertNotIn("__PM_", text)
+            self.assertIn("\r\nfunction Update(self, dt)\r\n", text)
             lua_balance.check(text)
         self.assertEqual(modbuild.detect_mode(FAKE_SCRIPT), "vanilla")
 

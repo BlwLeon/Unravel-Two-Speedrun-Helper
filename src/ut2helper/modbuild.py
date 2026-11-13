@@ -21,6 +21,10 @@ LEGACY_MARKER = "SPEEDRUN PRACTICE MOD"
 
 MODES = ("practice", "speedrun")
 
+# The game seems to refuse scripts above ~538 KB (538 488 bytes works, 539 483
+# gives a black screen). Stay well below that.
+MAX_SCRIPT_SIZE = 535_000
+
 
 class ModBuildError(Exception):
     pass
@@ -58,7 +62,31 @@ def lua_config(mode: str, settings: Settings) -> str:
 
 
 def template() -> str:
-    return resources.files("ut2helper").joinpath("lua/practice_mod.lua").read_text(encoding="utf-8")
+    text = resources.files("ut2helper").joinpath("lua/practice_mod.lua").read_text(encoding="utf-8")
+    # The game resolves CWHASH("...") while loading the script; any other argument
+    # makes the whole script fail to load (black screen).
+    if re.search(r'CWHASH\((?!")', text):
+        raise ModBuildError("CWHASH() must only be used with string literals in the mod template.")
+    return text
+
+
+def _strip_comment_lines(text: str, dedent: bool) -> str:
+    """Remove full-line comments (and blank lines / indentation if ``dedent``).
+
+    Safe for these scripts: they contain no multi-line strings, and lines that open
+    or close a block comment (``--[[`` / ``]]``) are kept.
+    """
+    out = []
+    for line in text.split("\n"):
+        s = line.strip()
+        if s.startswith("--") and "[[" not in s and "]]" not in s and "UT2SH-MARKER" not in s:
+            continue
+        if dedent:
+            if not s:
+                continue
+            line = s
+        out.append(line)
+    return "\n".join(out)
 
 
 def build_script(vanilla: bytes, mode: str, settings: Settings) -> bytes:
@@ -71,12 +99,16 @@ def build_script(vanilla: bytes, mode: str, settings: Settings) -> bytes:
     mod = template()
     mod = mod.replace("__PM_CONFIG__", lua_config(mode, settings))
     mod = mod.replace("__PM_MODE__", mode).replace("__PM_VERSION__", __version__)
-    mod = mod.replace("\r\n", "\n").replace("\n", "\r\n")
+    mod = _strip_comment_lines(mod.replace("\r\n", "\n"), dedent=True)
+    mod = mod.rstrip("\n").replace("\n", "\r\n") + "\r\n"
     src = src.replace(ANCHOR_UPDATE, mod + ANCHOR_UPDATE)
     src = src.replace(ANCHOR_EARLY,
                       "\tUpdateInputConfiguration(self, dt);\r\n\tpcall(PracticeUpdate, self, dt);\r\n\tUpdateWater(self, dt);")
     src = src.replace(ANCHOR_LATE, "\tpcall(PracticeLateUpdate, self, dt);\r\n" + ANCHOR_LATE)
-    return src.encode("latin-1")
+    data = src.encode("latin-1")
+    if len(data) > MAX_SCRIPT_SIZE:
+        raise ModBuildError(f"Modded script too large ({len(data)} bytes, limit {MAX_SCRIPT_SIZE}).")
+    return data
 
 
 def detect_mode(script: bytes) -> str:
