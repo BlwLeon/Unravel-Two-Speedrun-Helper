@@ -1,0 +1,20 @@
+[project]
+name = "ut2-speedrun-helper"
+version = "1.0.0"
+description = "Practice mod manager for Unravel Two speedrunners"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+[project.scripts]
+ut2-speedrun-helper = "ut2helper.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ut2helper = ["lua/*.lua"]
