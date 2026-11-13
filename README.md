@@ -140,7 +140,8 @@ python -m unittest discover -s tests
 build.bat                       # builds dist\UT2SpeedrunHelper.exe with PyInstaller
 ```
 
-Every push builds the exe via GitHub Actions; pushing a tag `v*` creates a release.
+Every push builds the exe via GitHub Actions. Pushes to `main` publish it as release
+`v<version>` (version from `src/ut2helper/__init__.py`) – bump the version for a new release.
 
 ### Project layout
 
